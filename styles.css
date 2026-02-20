@@ -153,7 +153,9 @@ body{
   width:100%;
   border-collapse: collapse;
   background:#fff;
+  table-layout: fixed;
 }
+
 .tt thead th{
   position: sticky;
   top: 0;
