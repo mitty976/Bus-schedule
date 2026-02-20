@@ -188,7 +188,7 @@ body{
 .tt th.colMin,
 .tt td.colMin{
   width:auto;
-  min-width:200px;
+  min-width:150px;
   border-left: 2px solid var(--line);
 }
 
