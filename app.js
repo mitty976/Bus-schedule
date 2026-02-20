@@ -9,7 +9,11 @@ async function loadHolidays(){
     const json = await res.json();
 
     if(Array.isArray(json)){
-      HOLIDAYS = new Set(json.map(v => (typeof v === "string") ? v : (v.date || "" )).filter(Boolean));
+      HOLIDAYS = new Set(
+        json
+          .map(v => (typeof v === "string") ? v : (v.date || ""))
+          .filter(Boolean)
+      );
     }else{
       HOLIDAYS = new Set(Object.keys(json));
     }
@@ -128,22 +132,13 @@ function getDayType(isoDate){
   return "weekday";
 }
 
-function escapeHtml(str){
-  return String(str)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#39;");
-}
-
 // ====== DOM ======
 const elDate = document.getElementById("date");
 const elHour = document.getElementById("hour");
 const elMin  = document.getElementById("minute");
 const elStop = document.getElementById("stop");
 
-const elTbody = document.getElementById("tbody");
+const elTbody = document.getElementById("timetableBody"); // ✅ HTMLと一致
 const elCrumb = document.getElementById("crumb");
 const elDir   = document.getElementById("direction");
 const elDayChip = document.getElementById("dayTypeChip");
@@ -178,24 +173,31 @@ function buildStopSelector(){
   });
 }
 
+// ✅ 1時間=1行 表示（分は横並び）
+// テーブルは 4列（時/分/行き先/備考）に合わせる
 function renderGroupedByHour(list){
   elTbody.innerHTML = "";
 
-  // hour -> { minutes:[], dest, note }
-  const map = new Map();
+  const map = new Map(); // hh -> { minutes:Set, dest:Set, note:Set }
   for(const item of list){
+    if(!item?.dep) continue;
     const [hh, mm] = item.dep.split(":");
     if(!map.has(hh)){
-      map.set(hh, { minutes: [], dest: item.dest || "", note: item.note || "" });
+      map.set(hh, { minutes: new Set(), dest: new Set(), note: new Set() });
     }
-    map.get(hh).minutes.push(mm);
+    const g = map.get(hh);
+    g.minutes.add(mm);
+    if(item.dest) g.dest.add(item.dest);
+    if(item.note) g.note.add(item.note);
   }
 
   const hours = Array.from(map.keys()).sort((a,b)=>Number(a)-Number(b));
 
   for(const hh of hours){
     const g = map.get(hh);
-    g.minutes.sort((a,b)=>Number(a)-Number(b));
+    const minutes = Array.from(g.minutes).sort((a,b)=>Number(a)-Number(b));
+    const destText = Array.from(g.dest).join(" / ");
+    const noteText = Array.from(g.note).join(" / ");
 
     const tr = document.createElement("tr");
 
@@ -209,7 +211,7 @@ function renderGroupedByHour(list){
     const wrap = document.createElement("div");
     wrap.className = "tt-minutes";
 
-    for(const mm of g.minutes){
+    for(const mm of minutes){
       const span = document.createElement("span");
       span.className = "tt-minute";
       span.textContent = mm;
@@ -219,9 +221,13 @@ function renderGroupedByHour(list){
 
     const tdD = document.createElement("td");
     tdD.className = "colDest";
-    tdD.textContent = g.dest;
+    tdD.textContent = destText;
 
-    tr.append(tdH, tdM, tdD);
+    const tdN = document.createElement("td");
+    tdN.className = "colNote";
+    tdN.textContent = noteText;
+
+    tr.append(tdH, tdM, tdD, tdN);
     elTbody.appendChild(tr);
   }
 }
@@ -247,15 +253,14 @@ function render(){
     .sort((a,b)=>toMinutes(a.dep)-toMinutes(b.dep))
     .filter(it => toMinutes(it.dep) >= after);
 
-  elTbody.innerHTML = "";
   if(list.length === 0){
+    elTbody.innerHTML = "";
     elHint.textContent = "指定時刻以降の便が見つかりませんでした。時刻を戻すか、別日を選んでください。";
     return;
   }
   elHint.textContent = "";
-  
+
   renderGroupedByHour(list);
-  return;
 }
 
 // ====== Init ======
