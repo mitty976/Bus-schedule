@@ -212,34 +212,55 @@ function render(){
     const [hh, mm] = item.dep.split(":");
     const hour = hh;
 
+function renderTimetableHourRows(rows) {
+  const tbody = document.getElementById("timetableBody");
+  tbody.innerHTML = "";
+
+  const map = new Map();
+
+  for (const r of rows) {
+    if (!r.dep) continue;
+    const [hh, mm] = r.dep.split(":");
+
+    if (!map.has(hh)) map.set(hh, []);
+    map.get(hh).push(mm);
+  }
+
+  const hours = Array.from(map.keys()).sort();
+
+  for (const hh of hours) {
     const tr = document.createElement("tr");
 
     // 時
     const tdH = document.createElement("td");
     tdH.className = "colHour";
-    tdH.textContent = (hour !== prevHour) ? hour : "";
-    tr.appendChild(tdH);
+    tdH.textContent = hh;
 
-    // 分
+    // 分（←ここが横並びになる）
     const tdM = document.createElement("td");
     tdM.className = "colMin";
-    tdM.innerHTML = `<span class="mm">${mm}</span>`;
-    tr.appendChild(tdM);
+
+    const wrap = document.createElement("div");
+    wrap.className = "tt-minutes";
+
+    map.get(hh)
+      .sort((a,b)=>a-b)
+      .forEach(mm=>{
+        const span=document.createElement("span");
+        span.className="tt-minute";
+        span.textContent=mm;
+        wrap.appendChild(span);
+      });
+
+    tdM.appendChild(wrap);
 
     // 行き先
     const tdD = document.createElement("td");
     tdD.className = "colDest";
-    tdD.textContent = item.dest || "";
-    tr.appendChild(tdD);
+    tdD.textContent = rows.find(r=>r.dep.startsWith(hh))?.dest ?? "";
 
-    // 備考
-    const tdN = document.createElement("td");
-    tdN.className = "colNote";
-    tdN.innerHTML = item.note ? `<span class="badge">${escapeHtml(item.note)}</span>` : "";
-    tr.appendChild(tdN);
-
-    elTbody.appendChild(tr);
-    prevHour = hour;
+    tr.append(tdH, tdM, tdD);
+    tbody.appendChild(tr);
   }
 }
 
