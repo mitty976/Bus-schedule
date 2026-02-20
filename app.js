@@ -178,6 +178,54 @@ function buildStopSelector(){
   });
 }
 
+function renderGroupedByHour(list){
+  elTbody.innerHTML = "";
+
+  // hour -> { minutes:[], dest, note }
+  const map = new Map();
+  for(const item of list){
+    const [hh, mm] = item.dep.split(":");
+    if(!map.has(hh)){
+      map.set(hh, { minutes: [], dest: item.dest || "", note: item.note || "" });
+    }
+    map.get(hh).minutes.push(mm);
+  }
+
+  const hours = Array.from(map.keys()).sort((a,b)=>Number(a)-Number(b));
+
+  for(const hh of hours){
+    const g = map.get(hh);
+    g.minutes.sort((a,b)=>Number(a)-Number(b));
+
+    const tr = document.createElement("tr");
+
+    const tdH = document.createElement("td");
+    tdH.className = "colHour";
+    tdH.textContent = hh;
+
+    const tdM = document.createElement("td");
+    tdM.className = "colMin";
+
+    const wrap = document.createElement("div");
+    wrap.className = "tt-minutes";
+
+    for(const mm of g.minutes){
+      const span = document.createElement("span");
+      span.className = "tt-minute";
+      span.textContent = mm;
+      wrap.appendChild(span);
+    }
+    tdM.appendChild(wrap);
+
+    const tdD = document.createElement("td");
+    tdD.className = "colDest";
+    tdD.textContent = g.dest;
+
+    tr.append(tdH, tdM, tdD);
+    elTbody.appendChild(tr);
+  }
+}
+
 // ====== Render ======
 function render(){
   const stopKey = elStop.value;
@@ -205,63 +253,9 @@ function render(){
     return;
   }
   elHint.textContent = "";
-
-  // group by hour
-  let prevHour = null;
-  for(const item of list){
-    const [hh, mm] = item.dep.split(":");
-    const hour = hh;
-
-function renderTimetableHourRows(rows) {
-  const tbody = document.getElementById("timetableBody");
-  tbody.innerHTML = "";
-
-  const map = new Map();
-
-  for (const r of rows) {
-    if (!r.dep) continue;
-    const [hh, mm] = r.dep.split(":");
-
-    if (!map.has(hh)) map.set(hh, []);
-    map.get(hh).push(mm);
-  }
-
-  const hours = Array.from(map.keys()).sort();
-
-  for (const hh of hours) {
-    const tr = document.createElement("tr");
-
-    // 時
-    const tdH = document.createElement("td");
-    tdH.className = "colHour";
-    tdH.textContent = hh;
-
-    // 分（←ここが横並びになる）
-    const tdM = document.createElement("td");
-    tdM.className = "colMin";
-
-    const wrap = document.createElement("div");
-    wrap.className = "tt-minutes";
-
-    map.get(hh)
-      .sort((a,b)=>a-b)
-      .forEach(mm=>{
-        const span=document.createElement("span");
-        span.className="tt-minute";
-        span.textContent=mm;
-        wrap.appendChild(span);
-      });
-
-    tdM.appendChild(wrap);
-
-    // 行き先
-    const tdD = document.createElement("td");
-    tdD.className = "colDest";
-    tdD.textContent = rows.find(r=>r.dep.startsWith(hh))?.dest ?? "";
-
-    tr.append(tdH, tdM, tdD);
-    tbody.appendChild(tr);
-  }
+  
+  renderGroupedByHour(list);
+  return;
 }
 
 // ====== Init ======
