@@ -199,17 +199,26 @@ body{
   text-underline-offset: 3px;
 }
 
-.colDest{ width:auto; text-align:center; }
-.colNote{ width:210px; text-align:center; color:var(--muted); }
+.colDest{
+  width:auto;
+  text-align:center;
+}
+
+.colNote{
+  width:210px;
+  text-align:center;
+  color:var(--muted);
+}
+
+.colMin{
+  width: 160px;
+  text-align:left;
+}
 
 .mm{
   color:var(--muted);
   font-weight:900;
   font-size:16px;
-}
-
-.colMin{
-  text-align:left;
 }
 
 .tt-minutes{
