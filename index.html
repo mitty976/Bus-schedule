@@ -3,206 +3,69 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>小吹台 → 河内長野駅前｜時刻表</title>
-  <style>
-    :root{ --text:#111; --muted:#666; --line:#e9e9e9; --chip:#f3f3f3; --max:760px; }
-    body{ margin:0; font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic","Meiryo",sans-serif; color:var(--text); }
-    .wrap{ max-width:var(--max); margin:0 auto; padding:16px; }
-    h1{ font-size:18px; margin:0 0 10px; }
-    .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:12px; border:1px solid var(--line); border-radius:14px; }
-    .controls label{ font-size:12px; color:var(--muted); display:block; margin-bottom:4px; }
-    .field{ display:flex; flex-direction:column; gap:4px; }
-    input, select{ font-size:14px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:#fff; }
-    .chip{ display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px; background:var(--chip); font-size:12px; font-weight:700; }
-    .hr{ height:1px; background:var(--line); margin:14px 0; }
-    .hour{ font-size:16px; font-weight:800; margin:18px 0 8px; }
-    .row{ display:flex; gap:12px; padding:10px 10px; border-radius:12px; border:1px solid var(--line); margin-bottom:8px; }
-    .time{ font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1; font-weight:800; min-width:64px; }
-    .meta{ font-size:12px; color:var(--muted); }
-    .empty{ color:var(--muted); font-size:13px; padding:12px 0; }
-  </style>
+  <title>バス時刻表</title>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
-
 <body>
-<div class="wrap">
-  <h1>小吹台 → 河内長野駅前 バス時刻表</h1>
+  <main class="wrap">
+    <header class="header">
+      <div class="topbar">
+        <div class="crumb" id="crumb">[410] 小吹台［南海バス］</div>
 
-  <div class="controls">
-    <div class="field">
-      <label for="date">日付</label>
-      <input id="date" type="date" />
-    </div>
+        <div class="controls">
+          <div class="field">
+            <label for="date">日付</label>
+            <input id="date" type="date" />
+          </div>
 
-    <div class="field">
-      <label for="hour">時刻</label>
-      <select id="hour">
-        <option value="0">0時</option><option value="1">1時</option><option value="2">2時</option><option value="3">3時</option>
-        <option value="4">4時</option><option value="5">5時</option><option value="6">6時</option><option value="7">7時</option>
-        <option value="8">8時</option><option value="9">9時</option><option value="10">10時</option><option value="11">11時</option>
-        <option value="12">12時</option><option value="13">13時</option><option value="14">14時</option><option value="15">15時</option>
-        <option value="16">16時</option><option value="17">17時</option><option value="18">18時</option><option value="19">19時</option>
-        <option value="20">20時</option><option value="21">21時</option><option value="22">22時</option><option value="23">23時</option>
-      </select>
-    </div>
+          <div class="field">
+            <label for="hour">時</label>
+            <select id="hour"></select>
+          </div>
 
-    <div class="field">
-      <label for="minute">分（任意）</label>
-      <select id="minute">
-        <option value="0">00</option><option value="10">10</option><option value="20">20</option>
-        <option value="30">30</option><option value="40">40</option><option value="50">50</option>
-      </select>
-    </div>
+          <div class="field">
+            <label for="minute">分</label>
+            <select id="minute"></select>
+          </div>
+        </div>
+      </div>
 
-    <div class="field" style="gap:8px;">
-      <span class="chip" id="daytype">—</span>
-      <div class="meta" id="summary">条件を選ぶと下に表示します</div>
-    </div>
-  </div>
+      <div class="center">
+        <div class="stopName">
+          <select id="stop" class="stopSelect" aria-label="バス停を選択"></select>
+          <span class="caret" aria-hidden="true">▾</span>
+        </div>
+        <div class="direction" id="direction">河内長野駅前方面</div>
+      </div>
+    </header>
 
-  <div class="hr"></div>
+    <section class="panel">
+      <div class="panelHead">
+        <h2 class="panelTitle">時刻表</h2>
+        <div class="chips">
+          <span class="chip" id="dayTypeChip">平日</span>
+          <span class="chip chip--ghost" id="afterChip">指定時刻以降</span>
+        </div>
+      </div>
 
-  <div id="result"></div>
-</div>
+      <div class="tableWrap">
+        <table class="tt">
+          <thead>
+            <tr>
+              <th class="colHour">時</th>
+              <th class="colMin">分</th>
+              <th class="colDest">行き先</th>
+              <th class="colNote">備考</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
 
-<script>
-  // ✅ ここがデータ：時刻は "HH:MM" 形式で持つ（到着や所要時間も足せる）
-  const timetable = {
-    weekday: [
-      { dep:"05:55", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"06:34", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"06:54", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"07:12", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"07:36", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"07:58", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"08:16", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"08:48", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"09:47", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"10:46", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"11:46", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"12:46", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"13:46", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"14:46", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"15:46", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"16:58", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"18:22", arr:null, note:"[10] 河内長野駅前" }, 
-      { dep:"19:31", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"20:31", arr:null, note:"[10] 河内長野駅前" },
-    ],
-    holiday: [
-      { dep:"06:10", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"07:09", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"07:46", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"08:33", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"09:44", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"10:58", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"11:56", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"12:56", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"13:56", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"14:56", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"15:56", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"16:56", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"17:57", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"18:57", arr:null, note:"[10] 河内長野駅前" }, 
-      { dep:"19:44", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"20:42", arr:null, note:"[10] 河内長野駅前" },
-    ]
-  };
+      <p class="hint" id="hint"></p>
+    </section>
+  </main>
 
-  // （簡易）祝日判定は運用により差が出るので、まずは土日=休日でOK
-  // 祝日まで厳密にやるなら「祝日カレンダーJSON」を持つ or ライブラリ導入
-  
-  function getDayType(dateStr){
-    if(!dateStr) return null;
-    const d = new Date(dateStr + "T00:00:00");
-    const day = d.getDay(); // 0=Sun ... 6=Sat
-    return (day === 0 || day === 6) ? "holiday" : "weekday";
-  }
-
-  function toMinutes(hhmm){
-    const [h,m] = hhmm.split(":").map(Number);
-    return h*60 + m;
-  }
-
-  function groupByHour(items){
-    const map = new Map();
-    for(const it of items){
-      const h = it.dep.slice(0,2);
-      if(!map.has(h)) map.set(h, []);
-      map.get(h).push(it);
-    }
-    return map;
-  }
-
-  function render(){
-    const date = document.getElementById("date").value;
-    const h = Number(document.getElementById("hour").value);
-    const m = Number(document.getElementById("minute").value);
-    const after = h*60 + m;
-
-    const type = getDayType(date);
-    const daytypeEl = document.getElementById("daytype");
-    const summaryEl = document.getElementById("summary");
-    const resultEl = document.getElementById("result");
-
-    if(!type){
-      daytypeEl.textContent = "—";
-      summaryEl.textContent = "条件を選ぶと下に表示します";
-      resultEl.innerHTML = "";
-      return;
-    }
-
-    daytypeEl.textContent = (type === "weekday") ? "平日" : "土・日・祝";
-    summaryEl.textContent = `${date} / ${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")} 以降の便`;
-
-    const list = timetable[type]
-      .slice()
-      .sort((a,b)=>toMinutes(a.dep)-toMinutes(b.dep))
-      .filter(it => toMinutes(it.dep) >= after);
-
-    if(list.length === 0){
-      resultEl.innerHTML = `<div class="empty">該当する便がありません。</div>`;
-      return;
-    }
-
-    const grouped = groupByHour(list);
-    let html = "";
-
-    for(const [hour, items] of grouped){
-      html += `<div class="hour">${hour}時</div>`;
-      for(const it of items){
-        html += `
-          <div class="row">
-            <div class="time">${it.dep} 発</div>
-            <div>
-              <div style="font-weight:700;">${it.note ?? ""}</div>
-              ${it.arr ? `<div class="meta">${it.arr} 着</div>` : ``}
-            </div>
-          </div>`;
-      }
-    }
-
-    resultEl.innerHTML = html;
-  }
-
-  // 初期値：今日の日付 & いまの時刻（ざっくり）
-  (function init(){
-    const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth()+1).padStart(2,"0");
-    const dd = String(now.getDate()).padStart(2,"0");
-    document.getElementById("date").value = `${yyyy}-${mm}-${dd}`;
-
-    document.getElementById("hour").value = String(now.getHours());
-    const min = now.getMinutes();
-    const snapped = Math.floor(min/10)*10; // 10分刻みに丸め
-    document.getElementById("minute").value = String(snapped);
-
-    ["date","hour","minute"].forEach(id=>{
-      document.getElementById(id).addEventListener("change", render);
-    });
-    render();
-  })();
-</script>
+  <script src="./app.js" defer></script>
 </body>
 </html>
-
