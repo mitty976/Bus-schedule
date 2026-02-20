@@ -208,6 +208,19 @@ body{
   font-size:16px;
 }
 
+.tt-minutes{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 14px;
+  justify-content:center;
+}
+
+.tt-minute{
+  font-weight:900;
+  font-size:21px; /* 既存の.mmと近いサイズ */
+  color:#111;
+}
+
 .badge{
   display:inline-flex;
   align-items:center;
