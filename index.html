@@ -34,7 +34,7 @@
     </div>
 
     <div class="field">
-      <label for="hour">時刻（○時以降）</label>
+      <label for="hour">時刻</label>
       <select id="hour">
         <option value="0">0時</option><option value="1">1時</option><option value="2">2時</option><option value="3">3時</option>
         <option value="4">4時</option><option value="5">5時</option><option value="6">6時</option><option value="7">7時</option>
@@ -68,28 +68,49 @@
   // ✅ ここがデータ：時刻は "HH:MM" 形式で持つ（到着や所要時間も足せる）
   const timetable = {
     weekday: [
-      { dep:"05:56", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"06:15", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"06:33", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"06:52", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"07:00", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"07:23", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"07:33", arr:null, note:"[10] 河内長野駅前" },
-      { dep:"07:57", arr:null, note:"[10] 河内長野駅前" },
-      // …必要分追加
-      { dep:"20:20", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"05:55", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"06:34", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"06:54", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"07:12", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"07:36", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"07:58", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"08:16", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"08:48", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"09:47", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"10:46", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"11:46", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"12:46", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"13:46", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"14:46", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"15:46", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"16:58", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"18:22", arr:null, note:"[10] 河内長野駅前" }, 
+      { dep:"19:31", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"20:31", arr:null, note:"[10] 河内長野駅前" },
     ],
     holiday: [
       { dep:"06:10", arr:null, note:"[10] 河内長野駅前" },
       { dep:"07:09", arr:null, note:"[10] 河内長野駅前" },
       { dep:"07:46", arr:null, note:"[10] 河内長野駅前" },
-      // …必要分追加
-      { dep:"21:00", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"08:33", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"09:44", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"10:58", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"11:56", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"12:56", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"13:56", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"14:56", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"15:56", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"16:56", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"17:57", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"18:57", arr:null, note:"[10] 河内長野駅前" }, 
+      { dep:"19:44", arr:null, note:"[10] 河内長野駅前" },
+      { dep:"20:42", arr:null, note:"[10] 河内長野駅前" },
     ]
   };
 
   // （簡易）祝日判定は運用により差が出るので、まずは土日=休日でOK
   // 祝日まで厳密にやるなら「祝日カレンダーJSON」を持つ or ライブラリ導入
+  
   function getDayType(dateStr){
     if(!dateStr) return null;
     const d = new Date(dateStr + "T00:00:00");
@@ -184,3 +205,4 @@
 </script>
 </body>
 </html>
+
