@@ -1,24 +1,32 @@
 // ====== Holiday calendar ======
 let HOLIDAYS = new Set();
 
-async function loadHolidays(){
+async function loadHolidaysFromApi(year){
+  const cacheKey = `jp-holidays-${year}`;
+
+  // 1) cache
+  const cached = localStorage.getItem(cacheKey);
+  if(cached){
+    HOLIDAYS = new Set(JSON.parse(cached));
+    return true;
+  }
+
   try{
-    const res = await fetch("holiday-calendar.json", { cache: "no-store" });
-    if(!res.ok) return;
+    const url = `https://holidays-jp.github.io/api/v1/date.json`;
+
+    const res = await fetch(url, { cache: "no-store" });
+    if(!res.ok) throw new Error(`holiday api ${res.status}`);
 
     const json = await res.json();
 
-    if(Array.isArray(json)){
-      HOLIDAYS = new Set(
-        json
-          .map(v => (typeof v === "string") ? v : (v.date || ""))
-          .filter(Boolean)
-      );
-    }else{
-      HOLIDAYS = new Set(Object.keys(json));
-    }
+    const dates = Array.isArray(json) ? json : Object.keys(json);
+
+    HOLIDAYS = new Set(dates);
+
+    localStorage.setItem(cacheKey, JSON.stringify(dates));
+    return true;
   }catch(e){
-    // 読み込めなくても土日判定で動かす
+    return false;
   }
 }
 
@@ -274,6 +282,14 @@ function render(){
   const yyyy = now.getFullYear();
   const mm = pad2(now.getMonth()+1);
   const dd = pad2(now.getDate());
+
+  const year = new Date().getFullYear();
+
+  const ok = await loadHolidaysFromApi(year);
+  if(!ok){
+    await loadHolidays();
+  }
+  
   elDate.value = `${yyyy}-${mm}-${dd}`;
 
   elHour.value = String(now.getHours());
