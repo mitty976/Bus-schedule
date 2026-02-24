@@ -30,6 +30,28 @@ async function loadHolidaysFromApi(year){
   }
 }
 
+async function loadHolidaysLocal(){
+  try{
+    const res = await fetch("holiday-calendar.json", { cache: "no-store" });
+    if(!res.ok) return false;
+
+    const json = await res.json();
+    // {"YYYY-MM-DD":"祝日名", ...} or ["YYYY-MM-DD", ...] or [{date:"YYYY-MM-DD"}, ...]
+    let dates = [];
+    if(Array.isArray(json)){
+      dates = json.map(v => (typeof v === "string") ? v : (v?.date || "")).filter(Boolean);
+    }else{
+      dates = Object.keys(json);
+    }
+
+    HOLIDAYS = new Set(dates);
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+
 // ====== Demo data (ここをあなたのPDF/データに合わせて増やす) ======
 const timetables = {
   kobukidai: {
@@ -273,28 +295,23 @@ function render(){
 
 // ====== Init ======
 (async function init(){
-  await loadHolidays();
-
-  buildTimeSelectors();
-  buildStopSelector();
-
   const now = new Date();
   const yyyy = now.getFullYear();
   const mm = pad2(now.getMonth()+1);
   const dd = pad2(now.getDate());
 
-  const year = new Date().getFullYear();
-
-  const ok = await loadHolidaysFromApi(year);
+  // 祝日読み込み: API → 失敗したらローカルJSON
+  const ok = await loadHolidaysFromApi(yyyy);
   if(!ok){
-    await loadHolidays();
+    await loadHolidaysLocal();
   }
-  
-  elDate.value = `${yyyy}-${mm}-${dd}`;
 
+  buildTimeSelectors();
+  buildStopSelector();
+
+  elDate.value = `${yyyy}-${mm}-${dd}`;
   elHour.value = String(now.getHours());
   elMin.value = String(now.getMinutes());
-
   elStop.value = "kobukidai";
 
   ["date","hour","minute","stop"].forEach(id=>{
